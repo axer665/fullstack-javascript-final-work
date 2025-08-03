@@ -1,0 +1,62 @@
+networks:
+  app:
+    driver: bridge
+
+services:
+  be-service:
+    build:
+      context: ./BE
+    ports:
+      - 3000:3000
+    environment:
+      - HTTP_PORT=3000
+      - MONGO_URL=mongodb://mongo:27017/test
+      - JWT_SECRET=mstroinov
+      - JWT_EXPIRES=3d
+    volumes:
+      - ./public/hotels:/app/public/hotels
+    networks:
+      - app
+    depends_on:
+      - mongo
+
+  fe-service:
+    build:
+      context: ./FE
+    ports:
+      - 5173:5173
+    volumes:
+      - ./FE:/app
+      - ./public/hotels:/app/hotels
+    tty: true
+    environment:
+      - VITE_MAIN_URL=http://localhost:3000/api
+      - VITE_SERVER_URL=http://localhost:3000
+    depends_on:
+      - be-service
+      - mongo
+    networks:
+      - app
+
+  mongo:
+    image: mongo:4.4.6
+    ports:
+      - "27017:27017"
+    volumes:
+      - ./mongo-data:/data/db
+      # - mongo-data:/data/db
+    networks:
+      - app
+
+  mongoclient:
+    image: mongoclient/mongoclient:latest
+    container_name: mongoclient
+    depends_on:
+      - mongo
+    networks:
+      - app
+    ports:
+      - 3300:3000
+
+#volumes:
+#-  mongo-data:
