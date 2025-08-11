@@ -1,21 +1,43 @@
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {useAppSelector} from "@store/hooks.ts";
-import {useState} from "react";
+import React, {ChangeEvent, useState} from "react";
 import useFetchData from "@api";
-import {useNavigate} from "react-router-dom";
+import {useNavigate, useParams} from "react-router-dom";
 
 import iziToast from "izitoast";
 
 function RoomUpdate() {
     const navigate = useNavigate();
     const currentRoom = useAppSelector(state => state.rooms.currentRoom);
+
+    const [getCurrentRoom, setCurrentRoom] = useState(currentRoom);
     const [title, setTitle] = useState<string>(currentRoom.title);
     const [description, setDescription] = useState<string>(currentRoom.description);
-    const [images, setImages] = useState<any>();
+    const [images, setImages] = useState<FileList | null>(null);
     const {roomsApi} = useFetchData();
 
+    const {roomId} = useParams();
 
-    const onSubmit = async (e: any) => {
+    if (!getCurrentRoom._id && roomId) {
+        roomsApi.findById(roomId).then(response => {
+            setCurrentRoom(response.data);
+            setTitle(response.data.title);
+            setDescription(response.data.description);
+        }).catch(error => {
+            console.log(error);
+        })
+    }
+
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            setImages(files);
+        } else {
+            setImages(null);
+        }
+    };
+
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         try {
             e.preventDefault();
 
@@ -52,7 +74,7 @@ function RoomUpdate() {
                 }
             }
 
-            if (Object.keys(images).length > 10) {
+            if (images && Object.keys(images).length > 10) {
                 iziToast.warning({
                     message: 'Нельзя загрузить более 10 изображений',
                     position: 'topRight',
@@ -61,7 +83,7 @@ function RoomUpdate() {
             }
 
             let extValid = true;
-            if (Object.keys(images).length > 0) {
+            if (images && Object.keys(images).length > 0) {
                 for (const key in images) {
                     if (Object.prototype.hasOwnProperty.call(images, key)) {
                         const image = images[key];
@@ -86,12 +108,15 @@ function RoomUpdate() {
             formData.append('title', title);
             formData.append('description', description);
 
-            for (const key in images) {
-                if (Object.prototype.hasOwnProperty.call(images, key)) {
-                    const image = images[key];
-                    formData.append('images', image);
+            if (images) {
+                for (const key in images) {
+                    if (Object.prototype.hasOwnProperty.call(images, key)) {
+                        const image = images[key];
+                        formData.append('images', image);
+                    }
                 }
             }
+
 
             roomsApi.updateRoom(formData, currentRoom._id)
                 .then(result => {
@@ -118,26 +143,26 @@ function RoomUpdate() {
         <Container className="bg-white rounded shadow-sm p-2">
             <Row>
                 <Col>
-                <h3 className="fs-2 fw-bold">Редактирование номера</h3>
+                    <h3 className="fs-2 fw-bold">Редактирование номера</h3>
 
                     <form className="mb-3" onSubmit={onSubmit}>
                         <div className="form-group mb-3">
                             <label>Наименование номера</label>
                             <input type="text" className="form-control mb-3" placeholder="Наименование" value={title}
-                                          onChange={(e) => setTitle(e.target.value)} required/>
+                                   onChange={(e) => setTitle(e.target.value)} required/>
                         </div>
 
                         <div className="form-group mb-3">
                             <label>Описание (не более 5000 символов)</label>
                             <textarea rows={7} className="form-control mb-3" maxLength={5000}
-                                          placeholder="Описание" value={description}
-                                          onChange={(e) => setDescription(e.target.value)}/>
+                                      placeholder="Описание" value={description}
+                                      onChange={(e) => setDescription(e.target.value)}/>
                         </div>
 
                         <div className="form-group mb-3">
                             <label>Изображения номера (не более 10)</label>
                             <input type="file" className="form-control" multiple accept="image/*"
-                                          onChange={(e: any) => setImages(e.target.files)}/>
+                                   onChange={handleFileChange}/>
                         </div>
 
                         <Button variant="success" type="submit" className="me-2">

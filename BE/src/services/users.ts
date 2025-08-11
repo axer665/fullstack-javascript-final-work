@@ -26,13 +26,14 @@ export class UsersService {
 
   async findAll(params: Partial<SearchDto>): Promise<Users[]> {
     const { limit, offset, email, name, contactPhone } = params;
-    const query = {
-      email: { $regex: new RegExp(email, 'i') },
-      name: { $regex: new RegExp(name, 'i') },
-      contactPhone: { $regex: new RegExp(contactPhone, 'i') },
-    };
     return this.usersModel
-      .find(query)
+      .find({
+        $and: [
+          { email: { $regex: new RegExp(email, 'i') } },
+          { name: { $regex: new RegExp(name, 'i') } },
+          { contactPhone: { $regex: new RegExp(contactPhone, 'i') } },
+        ],
+      })
       .limit(limit ?? 0)
       .skip(offset ?? 0)
       .select('email name contactPhone role');
@@ -41,12 +42,12 @@ export class UsersService {
   async findById(id: ID): Promise<Users> {
     const isValidId = mongoose.isValidObjectId(id);
     if (!isValidId) {
-      throw new BadRequestException('Некорректный ID пользователя!');
+      throw new BadRequestException('Инвалидный ID пользователя');
     }
 
     const user = await this.usersModel.findById(id);
     if (!user) {
-      throw new NotFoundException('Пользователь не найден!');
+      throw new NotFoundException('Нет такого пользователя');
     }
 
     return user;

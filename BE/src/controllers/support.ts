@@ -73,6 +73,8 @@ export class SupportController {
     @Param('id') supportRequestId: ID,
     @Query() data: { userId: ID },
   ): Promise<Message[]> {
+    console.log('get nessage query data:');
+    console.log(data);
     return this.supportService.getMessages(supportRequestId, data.userId);
   }
 
@@ -83,12 +85,16 @@ export class SupportController {
     @Request() request: any,
   ) {
     if (request.user?.role === 'client') {
-      this.supportClientService.markMessagesAsRead(markMessagesAsReadDto);
+      this.supportClientService
+        .markMessagesAsRead(markMessagesAsReadDto)
+        .then(() => {});
     } else if (
       request.user?.role === 'manager' ||
       request.user?.role === 'admin'
     ) {
-      this.supportEmployeeService.markMessagesAsRead(markMessagesAsReadDto);
+      this.supportEmployeeService
+        .markMessagesAsRead(markMessagesAsReadDto)
+        .then(() => {});
     }
   }
 

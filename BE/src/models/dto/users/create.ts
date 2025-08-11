@@ -1,4 +1,11 @@
-import { IsEmail, IsNotEmpty, IsOptional, IsString } from 'class-validator';
+import {
+  IsEmail,
+  IsEnum,
+  IsNotEmpty,
+  IsOptional,
+  IsString,
+} from 'class-validator';
+import { UserRole } from '@enums/UserRole';
 
 export class CreateDto {
   @IsNotEmpty({ message: 'Email является обязательным для заполнения полем' })
@@ -21,5 +28,8 @@ export class CreateDto {
 
   @IsOptional()
   @IsString()
+  @IsEnum(UserRole, {
+    message: 'Доступные роли: Администратор, Модератор, Клиент... других нет',
+  })
   readonly role?: string;
 }

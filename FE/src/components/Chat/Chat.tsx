@@ -11,18 +11,22 @@ import API from "@api";
 import Form from "@components/Chat/Form.tsx";
 import Loader from "@components/Loader.tsx";
 import Messages from "@components/Chat/Messages.tsx";
+import {Message, SendMessageDto} from "@interfaces/chat.ts";
 
 function Chat() {
     const user = useAppSelector(state => state.user);
+    const {authUser} = API();
+
 
     const navigate = useNavigate();
     const queryParams = new URLSearchParams(location.search);
 
     const [error, setError] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
-    const [messages, setMessages] = useState<any>([]);
+    const [messages, setMessages] = useState<Message[]>([]);
 
     const {supportRequestApi} = API();
+
 
     const listener = (socketDto: SocketDto) => {
         if (user.id !== socketDto.author.id) {
@@ -31,44 +35,62 @@ function Chat() {
                 authorId: socketDto.author.id,
                 text: socketDto.text,
                 sentAt: socketDto.sentAt,
+                readAt: null,
             }])
         }
     };
     useSocketEvent('subscribeToChat', listener);
 
     useEffect(() => {
-        // Если не хватает параметров - ошибка... дальше не работаем
-        if (!queryParams.get('id') || !queryParams.get('email')) {
-            navigate('/error');
-            return;
-        }
+        (async () => {
+            try {
+                if (!queryParams.get('id') || !queryParams.get('email')) {
+                    navigate('/error');
+                    return;
+                }
 
-        const requestUserId: any = user.id;
-        const supportRequestId: any = queryParams.get('id');
+                let userId;
+                if (!user.id)
+                    await authUser.getInfo(queryParams.get('email') || '')
+                        .catch(err => {
+                            console.log(err)
+                        })
+                        .then(response => {
+                            userId = response?.data.id
+                        })
 
-        supportRequestApi.getMessages(supportRequestId, requestUserId)
-            .then(result => {
-                setLoading(false);
-                setMessages(result.data);
-                supportRequestApi.readMessages({
-                    userId: requestUserId,
-                    supportRequestId,
-                    createdBefore: new Date(),
-                }).then(() => {
-                });
-            })
-            .catch(err => {
-                setError(true);
-                iziToast.error({
-                    message: typeof err.data.message === 'string' ? err.data.message : err.data.message[0],
-                    position: 'topRight',
-                });
-            });
+                const requestUserId: string | null = user.id || userId || '';
+                const supportRequestId: string = queryParams.get('id') || '';
+
+                await supportRequestApi.getMessages(supportRequestId, requestUserId)
+                    .then(result => {
+                        setLoading(false);
+                        setMessages(result.data);
+                        supportRequestApi.readMessages({
+                            userId: requestUserId,
+                            supportRequestId,
+                            createdBefore: new Date(),
+                        }).then(() => {
+                        });
+                    })
+                    .catch(err => {
+                        setError(true);
+                        iziToast.error({
+                            message: typeof err.data.message === 'string' ? err.data.message : err.data.message[0],
+                            position: 'topRight',
+                        });
+                    });
+
+                // Update state with data
+            } catch (error) {
+                console.error('Error fetching data:', error);
+            }
+        })();
     }, []);
 
     const closeRequest = () => {
         try {
-            const supportRequestId: any = queryParams.get('id');
+            const supportRequestId: string = queryParams.get('id') || '';
 
             supportRequestApi.closeRequest(supportRequestId)
                 .then(() => {
@@ -91,9 +113,9 @@ function Chat() {
 
     const sendMessage = (text: string) => {
         try {
-            const supportRequestId: any = queryParams.get('id');
+            const supportRequestId: string = queryParams.get('id') || '';
 
-            const sendMessageDto: any = {
+            const sendMessageDto: SendMessageDto = {
                 supportRequestId,
                 authorId: user.id,
                 text,

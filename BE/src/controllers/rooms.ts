@@ -65,4 +65,9 @@ export class RoomsController {
   searchHotels(@Query() searchParams: SearchDto): Promise<Rooms[]> {
     return this.roomsService.search(searchParams);
   }
+
+  @Get(':id')
+  searchRoomById(@Param('id') roomId: ID) {
+    return this.roomsService.findById(roomId);
+  }
 }

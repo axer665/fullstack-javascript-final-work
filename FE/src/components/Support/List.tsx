@@ -5,11 +5,12 @@ import {useAppSelector} from "@store/hooks.ts";
 import {GetChatListParams} from "@interfaces/chat.ts";
 import Loader from "@components/Loader.tsx";
 import ListView from "@components/Support/ListView.tsx";
+import {SupportRequest} from "@interfaces/support.ts";
 
 function List() {
     const [error, setError] = useState<boolean>(false);
     const [loading, setLoading] = useState<boolean>(true);
-    const [list, setList] = useState<any>([]);
+    const [list, setList] = useState<SupportRequest[]>([]);
     const user = useAppSelector(state => state.user);
     const {supportRequestApi} = API();
 

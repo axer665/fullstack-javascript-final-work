@@ -75,6 +75,7 @@ function UserRoles(data: UserProps) {
                                 <Dropdown.Item
                                     onClick={() => changeRole(elem._id, 'manager')}>Менеджер</Dropdown.Item>
                                 <Dropdown.Item onClick={() => changeRole(elem._id, 'admin')}>Админ</Dropdown.Item>
+                                <Dropdown.Item onClick={() => changeRole(elem._id, 'test')}>Несуществующая роль</Dropdown.Item>
                             </DropdownButton>
                         </td>
                     </tr>

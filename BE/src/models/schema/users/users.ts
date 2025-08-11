@@ -1,5 +1,6 @@
 import { Prop, Schema, SchemaFactory } from '@nestjs/mongoose';
 import { Document, HydratedDocument } from 'mongoose';
+import { UserRole } from '@enums/UserRole';
 
 export type UsersDocument = HydratedDocument<Users>;
 
@@ -19,7 +20,7 @@ export class Users extends Document {
   @Prop()
   contactPhone: string;
 
-  @Prop({ default: 'client' })
+  @Prop({ default: UserRole.CLIENT, enum: Object.values(UserRole) })
   role: string;
 }
 

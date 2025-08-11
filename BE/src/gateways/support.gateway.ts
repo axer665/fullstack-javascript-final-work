@@ -1,11 +1,15 @@
 import {
   ConnectedSocket,
   MessageBody,
+  OnGatewayConnection,
+  OnGatewayDisconnect,
+  OnGatewayInit,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
-import { ID } from '@helpers//global';
+import { Server, Socket } from 'socket.io';
+import { ID } from '@helpers/global';
 import { UsersService } from '@services/users';
 import { SupportService } from '@services/support/support';
 
@@ -14,11 +18,27 @@ import { SupportService } from '@services/support/support';
     origin: '*',
   },
 })
-export class SupportGateway {
+export class SupportGateway
+  implements OnGatewayInit, OnGatewayConnection, OnGatewayDisconnect
+{
   constructor(
     private supportService: SupportService,
     private usersService: UsersService,
   ) {}
+
+  @WebSocketServer() ws: Server;
+
+  afterInit() {
+    console.log('WS server started!');
+  }
+
+  handleConnection(client: Socket) {
+    console.log(`Подключился клиент: ${client.id}`);
+  }
+
+  handleDisconnect(client: Socket) {
+    console.log(`Отключился клиент: ${client.id}`);
+  }
 
   @SubscribeMessage('subscribeToChat')
   async handleSubscribeToChat(

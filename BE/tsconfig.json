@@ -21,6 +21,7 @@
       "app/*": ["./src/*"],
       "@dto/*": ["./src/models/dto/*"],
       "@schema/*": ["./src/models/schema/*"],
+      "@enums/*": ["./src/models/enums/*"],
       "@services/*": ["./src/services/*"],
       "@controllers/*": ["./src/controllers/*"],
       "@modules/*": ["./src/modules/*"],

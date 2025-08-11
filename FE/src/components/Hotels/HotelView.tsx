@@ -1,7 +1,7 @@
 import iziToast from "izitoast";
 import {useEffect, useState} from "react";
 import {Button, Container} from "react-bootstrap";
-import {Link, useLocation, useNavigate} from "react-router-dom";
+import {Link, useNavigate, useParams} from "react-router-dom";
 import API from "@api";
 import {useAppDispatch, useAppSelector} from "@store/hooks.ts";
 import {setHotelsState} from "@store//hotels/hotelsSlice.ts";
@@ -10,6 +10,8 @@ import HotelRoomsList from "@components/Hotels/Rooms/RoomList.tsx";
 import HotelsListItem from "@components/Hotels/HotelList/HotelListItem.tsx";
 
 export default function HotelView() {
+    const { hotelId } = useParams();
+
     // идёт ли подгрузка данных
     const [loading, setLoading] = useState<boolean>(true);
     // есть ли ошибки
@@ -23,9 +25,6 @@ export default function HotelView() {
 
     const navigate = useNavigate();
 
-    const location = useLocation();
-    const queryParams = new URLSearchParams(location.search);
-
     const dispatch = useAppDispatch();
 
     useEffect(() => {
@@ -35,13 +34,13 @@ export default function HotelView() {
         setError(false);
 
         // если в GET параметрах нет id, то что-то не так...
-        if (!queryParams.get('id')) {
+        if (!hotelId) {
             // переходим на ошибку (и автоматом поймаем redirect на error404)
             navigate('/error');
             return;
         }
 
-        const id: any = queryParams.get('id');
+        let id: string = hotelId || '';
 
         // Обращаемся к API
         hotelsAPI.findById(id)
@@ -68,7 +67,7 @@ export default function HotelView() {
                 <Container>
                     <p className="fs-2 fw-bold">Информация об отеле</p>
                     {role === 'admin' &&
-                        <Link to={`/update-hotel`}>
+                        <Link to={`/update-hotel/${hotelsState.currentHotel._id}`}>
                             <Button variant="warning" className="me-1 mb-2">Редактировать</Button>
                         </Link>
                     }
@@ -83,7 +82,7 @@ export default function HotelView() {
                     <>
                         <HotelsListItem hotel={hotelsState.currentHotel} showBtn={false}/>
                         {role === 'admin' &&
-                            <Link to={`/add-room?${hotelsState.currentHotel._id}`}
+                            <Link to={`/add-room/${hotelsState.currentHotel._id}`}
                                   className="ms-auto text-decoration-none">
                                 <div className="d-grid gap-2 mb-3">
                                     <Button variant="success" size="lg">Добавить номер</Button>

@@ -15,7 +15,7 @@ function HotelListItem({hotel, showBtn}: { hotel: HotelData, showBtn: boolean })
                     <textarea className="w-100" style={{resize: 'none'}} rows={10} defaultValue={hotel.description}
                               disabled></textarea>
                     {showBtn &&
-                        <Link to={`/hotel?id=${hotel._id}`} className="text-decoration-none">
+                        <Link to={`/hotel/${hotel._id}`} className="text-decoration-none">
                             <Button className="mb-2">Подробности</Button>
                         </Link>
                     }

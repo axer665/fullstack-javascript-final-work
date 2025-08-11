@@ -2,8 +2,8 @@ export interface Message {
     _id: string;
     authorId: string;
     text: string;
-    sentAt: Date;
-    readAt: Date;
+    sentAt: Date | string;
+    readAt: Date | null;
 }
 
 export interface MessageProps {
@@ -19,8 +19,8 @@ export interface formProps {
 }
 
 export interface SendMessageDto {
-    authorId: string;
-    supportRequestId: string;
+    authorId: string | null;
+    supportRequestId: string | null;
     text: string;
 }
 

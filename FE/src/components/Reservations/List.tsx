@@ -47,7 +47,7 @@ function List() {
             return;
         }
 
-        const id: any = queryParams.get('id');
+        const id: string = queryParams.get('id') || userId || '';
 
         reservationsApi.search({userId: id})
             .then(result => {

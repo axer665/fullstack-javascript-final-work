@@ -3,7 +3,7 @@ import {useNavigate} from "react-router-dom";
 import {useAppSelector} from "@store/hooks.ts";
 import iziToast from "izitoast";
 
-import {useState} from "react";
+import React, {ChangeEvent, useState} from "react";
 import useFetchData from "@api";
 
 
@@ -12,12 +12,20 @@ function HotelUpdate() {
     const currentHotel = useAppSelector(state => state.hotels.currentHotel);
     const [title, setTitle] = useState<string>(currentHotel.title);
     const [description, setDescription] = useState<string>(currentHotel.description);
-    const [images, setImages] = useState<any>();
+    const [images, setImages] = useState<FileList | null>(null);
     const {hotelsAPI} = useFetchData();
     const navigate = useNavigate();
 
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            setImages(files);
+        } else {
+            setImages(null);
+        }
+    };
 
-    const onSubmit = async (e: any) => {
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         try {
             e.preventDefault();
 
@@ -54,7 +62,7 @@ function HotelUpdate() {
                 }
             }
 
-            if (Object.keys(images).length > 10) {
+            if (images && Object.keys(images).length > 10) {
                 iziToast.warning({
                     message: 'Нельзя загрузить более 10 изображений',
                     position: 'topRight',
@@ -63,7 +71,7 @@ function HotelUpdate() {
             }
 
             let extValid = true;
-            if (Object.keys(images).length > 0) {
+            if (images && Object.keys(images).length > 0) {
                 for (const key in images) {
                     if (Object.prototype.hasOwnProperty.call(images, key)) {
                         const image = images[key];
@@ -86,10 +94,12 @@ function HotelUpdate() {
             const formData = new FormData();
             formData.append('title', title);
             formData.append('description', description);
-            for (const key in images) {
-                if (Object.prototype.hasOwnProperty.call(images, key)) {
-                    const image = images[key];
-                    formData.append('images', image);
+            if (images) {
+                for (const key in images as FileList) {
+                    if (Object.prototype.hasOwnProperty.call(images, key)) {
+                        const image = images[key];
+                        formData.append('images', image);
+                    }
                 }
             }
 
@@ -137,10 +147,10 @@ function HotelUpdate() {
                         <div className="form-group mb-3">
                             <label>Изображения отеля (не более 10)</label>
                             <input type="file" className="form-control" multiple accept="image/*"
-                                   onChange={(e: any) => setImages(e.target.files)}/>
+                                   onChange={handleFileChange}/>
                         </div>
 
-                        <Button variant="success" type="submit">
+                        <Button variant="success" type="submit" className="me-2">
                             Изменить
                         </Button>
                         <Button variant="secondary" type="reset">

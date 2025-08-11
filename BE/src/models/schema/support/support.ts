@@ -13,7 +13,6 @@ export class Support extends Document {
   userId: ID;
 
   @Prop({ required: false, default: [] })
-  // messages: [{ type: mongoose.Schema.Types.ObjectId; ref: 'Message' }];
   messages: MessageDocument[];
 
   @Prop({ required: false, default: true })

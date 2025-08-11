@@ -1,8 +1,8 @@
 import {Button, Col, Container, Row} from "react-bootstrap";
 import {useAppSelector} from "@store/hooks.ts";
-import {useState} from "react";
-import useFetchData from "@api";
-import {useNavigate} from "react-router-dom";
+import React, {ChangeEvent, useState} from "react";
+import API from "@api";
+import {useNavigate, useParams} from "react-router-dom";
 import iziToast from "izitoast";
 
 interface payloadItem {
@@ -11,14 +11,35 @@ interface payloadItem {
 }
 
 function RoomAdd() {
+    const navigate = useNavigate();
     const currentHotel = useAppSelector(state => state.hotels.currentHotel);
+
+    const [getCurrentHotel, setCurrentHotel] = useState(currentHotel);
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
-    const [images, setImages] = useState<any>();
-    const {roomsApi} = useFetchData();
-    const navigate = useNavigate();
+    const [images, setImages] = useState<FileList | null>(null);
+    const {roomsApi, hotelsAPI} = API();
 
-    const onSubmit = async (e: any) => {
+    const {hotelId} = useParams();
+
+    if (!getCurrentHotel._id && hotelId) {
+        hotelsAPI.findById(hotelId).then(response => {
+            setCurrentHotel(response.data);
+        }).catch(error => {
+            console.log(error);
+        })
+    }
+
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            setImages(files);
+        } else {
+            setImages(null);
+        }
+    };
+
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         try {
             e.preventDefault();
 
@@ -38,24 +59,23 @@ function RoomAdd() {
                 return;
             }
 
-            if (description.length > 0) {
-                if (description.length < 100) {
-                    iziToast.warning({
-                        message: 'Описание номера не может быть короче 100 символов',
-                        position: 'topRight',
-                    });
-                    return;
-                }
-                if (description.length > 5000) {
-                    iziToast.warning({
-                        message: 'Описание номера не может быть длиннее 5000 символов',
-                        position: 'topRight',
-                    });
-                    return;
-                }
+            if (description.length < 100) {
+                iziToast.warning({
+                    message: 'Описание номера не может быть короче 100 символов',
+                    position: 'topRight',
+                });
+                return;
+            }
+            if (description.length > 5000) {
+                iziToast.warning({
+                    message: 'Описание номера не может быть длиннее 5000 символов',
+                    position: 'topRight',
+                });
+                return;
             }
 
-            if (Object.keys(images).length > 10) {
+
+            if (images && Object.keys(images).length > 10) {
                 iziToast.warning({
                     message: 'Нельзя загрузить более 10 изображений',
                     position: 'topRight',
@@ -64,7 +84,7 @@ function RoomAdd() {
             }
 
             let extValid = true;
-            if (Object.keys(images).length > 0) {
+            if (images && Object.keys(images).length > 0) {
                 for (const key in images) {
                     if (Object.prototype.hasOwnProperty.call(images, key)) {
                         const image = images[key];
@@ -95,10 +115,12 @@ function RoomAdd() {
                 formData.append(item.key, item.value)
             })
 
-            for (const key in images) {
-                if (Object.prototype.hasOwnProperty.call(images, key)) {
-                    const image = images[key];
-                    formData.append('images', image);
+            if (images) {
+                for (const key in images) {
+                    if (Object.prototype.hasOwnProperty.call(images, key)) {
+                        const image = images[key];
+                        formData.append('images', image);
+                    }
                 }
             }
 
@@ -128,7 +150,7 @@ function RoomAdd() {
             <Row>
                 <Col>
                     <h3 className="fs-2 fw-bold">Добавить номер</h3>
-                    <p className="text-muted">Отель: {currentHotel.title}</p>
+                    <p className="text-muted">Отель: {getCurrentHotel.title}</p>
 
                     <form className="mb-3" onSubmit={onSubmit}>
                         <div className="form-group mb-3">
@@ -147,7 +169,7 @@ function RoomAdd() {
                         <div className="form-group mb-3">
                             <label htmlFor="room_images">Изображения номера (не более 10)</label>
                             <input id="room_images" type="file" className="form-control" multiple accept="image/*"
-                                   onChange={(e: any) => setImages(e.target.files)}/>
+                                   onChange={handleFileChange}/>
                         </div>
 
                         <Button variant="success" type="submit" className="me-2">

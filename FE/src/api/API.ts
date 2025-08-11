@@ -5,7 +5,8 @@ import {SearchRoomsDto, SearchHotelsDto} from "@interfaces/hotel.ts";
 import {RegistrationData} from "@interfaces/auth.ts";
 import {AddReservationDto, SearchReservationsDto} from "@interfaces/reservation.ts";
 import {CreateSupportRequestDto} from "@interfaces/support.ts";
-import {GetChatListParams, MarkMessagesAsReadDto, SendMessageDto} from "@interfaces/chat.ts";
+import {GetChatListParams, SendMessageDto} from "@interfaces/chat.ts";
+import {AxiosResponse} from "axios";
 
 export default function API() {
     const usersApi = {
@@ -54,6 +55,9 @@ export default function API() {
         updateRoom(data: FormData, id: string) {
             return apiRequest(`rooms/${id}`, {method: 'PUT', data}, true);
         },
+        findById(id: string): Promise<AxiosResponse> {
+            return apiRequest(`rooms/${id}`, {method: 'GET'});
+        }
     };
 
     const reservationsApi = {
@@ -78,10 +82,10 @@ export default function API() {
         sendMessage(data: SendMessageDto) {
             return apiRequest('support/sendmessage', {method: 'POST', data});
         },
-        getMessages(supportRequestId: string, userId: string) {
+        getMessages(supportRequestId: string, userId: string | null) {
             return apiRequest(`support/getmessages/${supportRequestId}`, {method: 'GET', params: {userId}});
         },
-        readMessages(data: MarkMessagesAsReadDto) {
+        readMessages(data: { supportRequestId: string; createdBefore: Date; userId: string | null }) {
             return apiRequest('support/readmessages', {method: 'POST', data});
         },
         closeRequest(supportRequestId: string) {

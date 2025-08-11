@@ -1,5 +1,5 @@
 import iziToast from "izitoast";
-import {useState} from "react";
+import React, {useState} from "react";
 import {Button} from "react-bootstrap";
 import {useAppSelector} from "@store/hooks";
 import API from "@api";
@@ -9,7 +9,7 @@ function SupportForm() {
     const userId = useAppSelector(state => state.user.id);
     const {supportRequestApi} = API();
 
-    const onSubmit = async (e: any) => {
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
         try {
             e.preventDefault();
 

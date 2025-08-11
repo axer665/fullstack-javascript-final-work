@@ -36,7 +36,7 @@ export class SupportService {
     const { supportRequestId, authorId, text } = sendMessageDto;
     const isValidSupportId = mongoose.isValidObjectId(supportRequestId);
     if (!isValidSupportId) {
-      throw new BadRequestException('Некорректный ID обращения!');
+      throw new BadRequestException('Инвалидный ID обращения');
     }
 
     const supportRequest = await this.supportModel
@@ -44,17 +44,17 @@ export class SupportService {
       .select('-__v')
       .exec();
     if (!supportRequest) {
-      throw new NotFoundException('Обращение с данным ID не найдено!');
+      throw new NotFoundException('Обращение с данным ID не найдено');
     }
 
     const isValidUserId = mongoose.isValidObjectId(authorId);
     if (!isValidUserId) {
-      throw new BadRequestException('Некорректный ID пользователя!');
+      throw new BadRequestException('Инвалидный ID у пользователя');
     }
 
     const user = await this.usersService.findById(authorId);
     if (!user) {
-      throw new NotFoundException('Пользователь с данным ID не найден!');
+      throw new NotFoundException('Пользователь с указанным ID не найден');
     }
 
     if (
@@ -63,9 +63,7 @@ export class SupportService {
       user.role !== 'admin' &&
       user.role !== 'manager'
     ) {
-      throw new ForbiddenException(
-        'Вы не можете оставлять сообщения в этом обращении!',
-      );
+      throw new ForbiddenException('У вас нет доступа к этому чату');
     }
 
     try {
@@ -102,6 +100,8 @@ export class SupportService {
       throw new NotFoundException('Обращение с данным ID не найдено!');
     }
 
+    console.log('userId');
+    console.log(userId);
     const isValidUserId = mongoose.isValidObjectId(userId);
     if (!isValidUserId) {
       throw new BadRequestException('Некорректный ID пользователя!');

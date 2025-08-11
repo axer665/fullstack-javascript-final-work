@@ -20,11 +20,11 @@ function RoomItem({ room }: { room: RoomData }) {
           <Col>
             <p className="fs-3 text-uppercase">{room.title}</p>
             <textarea style={{ resize: 'none' }} className="room-description w-100" rows={7} disabled defaultValue={room.description}></textarea>
-            <Link to={'/reserve-room'} className="text-decoration-none m-1">
+            <Link to={`/reserve-room/${room._id}`} className="text-decoration-none m-1">
               <Button onClick={() => dispatch(setRoomsState({ currentRoom: room }))}>Забронировать</Button>
             </Link>
             {role === 'admin' && 
-              <Link to={'/update-room'} className="text-decoration-none m-1">
+              <Link to={`/update-room/${room._id}`} className="text-decoration-none m-1">
                 <Button variant="warning" onClick={() => dispatch(setRoomsState({ currentRoom: room }))}>Редактировать</Button>
               </Link>
             }

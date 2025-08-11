@@ -19,7 +19,7 @@ export class SupportEmployeeService {
   async markMessagesAsRead(params: MarkMessageDto) {
     const isValidSupportId = mongoose.isValidObjectId(params.supportRequestId);
     if (!isValidSupportId) {
-      throw new BadRequestException('Некорректный ID обращения!');
+      throw new BadRequestException('Некорректный ID обращения');
     }
 
     const supportRequest = await this.supportModel
@@ -27,7 +27,7 @@ export class SupportEmployeeService {
       .select('-__v')
       .exec();
     if (!supportRequest) {
-      throw new NotFoundException('Обращение с данным ID не найдено!');
+      throw new NotFoundException('Обращение с данным ID не найдено');
     }
 
     try {

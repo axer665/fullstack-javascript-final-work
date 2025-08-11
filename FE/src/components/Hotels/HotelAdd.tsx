@@ -1,5 +1,5 @@
 import {Button, Col, Container, Row} from "react-bootstrap"
-import {useState} from "react";
+import React, {ChangeEvent, useState} from "react";
 import API from "@api";
 import {useNavigate} from "react-router-dom";
 import iziToast from "izitoast";
@@ -8,11 +8,21 @@ function HotelAdd() {
 
     const [title, setTitle] = useState<string>('');
     const [description, setDescription] = useState<string>('');
-    const [images, setImages] = useState<any>();
+    const [images, setImages] = useState<FileList | null>(null);
     const {hotelsAPI} = API();
     const navigate = useNavigate();
 
-    const onSubmit = async (e: any) => {
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const files = event.target.files;
+        if (files && files.length > 0) {
+            setImages(files);
+        } else {
+            setImages(null);
+        }
+    };
+
+    const onSubmit = async (e: React.FormEvent<HTMLFormElement>) => {
+        console.log(typeof e)
         try {
             e.preventDefault();
 
@@ -32,39 +42,44 @@ function HotelAdd() {
                 return;
             }
 
-            if (description.length > 0) {
-                if (description.length < 100) {
-                    iziToast.warning({
-                        message: 'Описание отеля не может быть короче 100 символов',
-                        position: 'topRight',
-                    });
-                    return;
-                }
-                if (description.length > 5000) {
-                    iziToast.warning({
-                        message: 'Описание отеля не может быть длиннее 5000 символов',
-                        position: 'topRight',
-                    });
-                    return;
-                }
-            }
-
-            if (Object.keys(images).length > 10) {
+            if (description.length < 100) {
                 iziToast.warning({
-                    message: 'Нельзя загрузить более 10 изображений',
+                    message: 'Описание отеля не может быть короче 100 символов',
+                    position: 'topRight',
+                });
+                return;
+            }
+            if (description.length > 5000) {
+                iziToast.warning({
+                    message: 'Описание отеля не может быть длиннее 5000 символов',
                     position: 'topRight',
                 });
                 return;
             }
 
+
+            if (images) {
+                if (Object.keys(images).length > 10) {
+                    iziToast.warning({
+                        message: 'Нельзя загрузить более 10 изображений',
+                        position: 'topRight',
+                    });
+                    return;
+                }
+            }
+
             let extValid = true;
-            if (Object.keys(images).length > 0) {
-                for (const key in images) {
-                    if (Object.prototype.hasOwnProperty.call(images, key)) {
-                        const image = images[key];
-                        if (!image.type.includes('image')) {
-                            extValid = false;
-                            break;
+            if (images) {
+                if (Object.keys(images).length > 0) {
+                    if (images && images.length > 0) {
+                        for (const key in images) {
+                            if (Object.prototype.hasOwnProperty.call(images, key)) {
+                                const image = images[key];
+                                if (!image.type.includes('image')) {
+                                    extValid = false;
+                                    break;
+                                }
+                            }
                         }
                     }
                 }
@@ -81,10 +96,12 @@ function HotelAdd() {
             const formData = new FormData();
             formData.append('title', title);
             formData.append('description', description);
-            for (const key in images) {
-                if (Object.prototype.hasOwnProperty.call(images, key)) {
-                    const image = images[key];
-                    formData.append('images', image);
+            if (images) {
+                for (const key in images as FileList) {
+                    if (Object.prototype.hasOwnProperty.call(images, key)) {
+                        const image = images[key];
+                        formData.append('images', image);
+                    }
                 }
             }
 
@@ -131,10 +148,10 @@ function HotelAdd() {
                         <div className="form-group mb-3">
                             <label>Изображения отеля (не более 10)</label>
                             <input type="file" className="form-control" multiple accept="image/*"
-                                   onChange={(e: any) => setImages(e.target.files)}/>
+                                   onChange={handleFileChange}/>
                         </div>
 
-                        <Button variant="success" type="submit">
+                        <Button variant="success" type="submit" className="me-2">
                             Создать
                         </Button>
                         <Button variant="secondary" type="reset">

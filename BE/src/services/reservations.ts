@@ -60,6 +60,19 @@ export class ReservationsService {
       );
     }
 
+    console.log(reservationDto);
+
+    const reservation = await this.reservationsModel.find({
+      $and: [
+        { dateStart: { $gte: new Date(reservationDto.dateStart) } }, // Заезд после или в указанную дату
+        { dateEnd: { $lte: new Date(reservationDto.dateStart) } }, // Выезд до или в указанную дату
+      ],
+    });
+
+    if (reservation) {
+      throw new BadRequestException('На выбранные даты номер зарезервирован');
+    }
+
     try {
       const createdReservation = new this.reservationsModel(reservationDto);
       return createdReservation.save();
